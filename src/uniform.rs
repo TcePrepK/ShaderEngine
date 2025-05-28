@@ -13,7 +13,9 @@ pub trait Uniform: Any {
     fn load_uniform(&self);
     fn is_dirty(&self) -> bool;
     fn clear_dirty(&mut self);
+    #[allow(dead_code)]
     fn as_any(&self) -> &dyn Any;
+    #[allow(dead_code)]
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
@@ -26,7 +28,7 @@ impl<T> UniformVariable<T> {
         }
     }
 
-    pub fn bind_program(&mut self, program: GLuint, name: &str) -> Result<(), ()> {
+    pub fn bind_program(&mut self, program: GLuint) -> Result<(), ()> {
         let uniform_name = CString::new(self.name.as_str()).unwrap();
         let location = unsafe { gl::GetUniformLocation(program, uniform_name.as_ptr()) };
         if location == -1 {
@@ -36,6 +38,7 @@ impl<T> UniformVariable<T> {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn get_location(&self) -> Option<GLint> {
         self.location
     }

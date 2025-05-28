@@ -11,8 +11,6 @@ use crate::raw_model::RawModel;
 use crate::shader::ShaderProgram;
 use crate::timer::Timer;
 use sdl2::video::GLProfile;
-use std::io::Write;
-use std::ops::Add;
 use std::os::raw;
 
 fn main() {
@@ -36,11 +34,12 @@ fn main() {
         gl::ClearColor(0.0, 0.0, 0.0, 1.0);
     }
 
-    let mut quad_shader = ShaderProgram::generate_graphics("Quad Shader", "quad.vert", "quad.frag");
+    let mut quad_shader =
+        ShaderProgram::generate_graphics("Quad Shader", "quad.vert", "quad.frag").unwrap();
     let quad_model = RawModel::from_vertices(&[-1.0, -1.0, 3.0, -1.0, -1.0, 3.0], &[0, 1, 2]);
 
-    let mut resolution_uniform = quad_shader.get_uniform::<[f32; 2]>("resolution").unwrap();
-    let mut time_uniform = quad_shader.get_uniform::<f32>("time").unwrap();
+    let resolution_uniform = quad_shader.get_uniform::<[f32; 2]>("resolution").unwrap();
+    let time_uniform = quad_shader.get_uniform::<f32>("time").unwrap();
 
     resolution_uniform
         .borrow_mut()
@@ -69,7 +68,7 @@ fn main() {
         window.gl_swap_window();
 
         let mut ref_timer = time_uniform.borrow_mut();
-        let mut timer_bind = ref_timer.get_bind();
+        let timer_bind = ref_timer.get_bind();
         *timer_bind += timer.elapsed() as f32;
     }
 }

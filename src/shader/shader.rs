@@ -2,7 +2,7 @@ use crate::quote;
 use crate::shader::error_handler::check_shader;
 use crate::shader::transpiler::{transpile_shader, TranspiledData};
 use crate::utils::colorized_text::Colorize;
-use crate::utils::nested_console_logger::NestedConsoleLogger;
+use crate::utils::html_logger::HTMLLogger;
 use gl::types::GLuint;
 use std::ffi::CString;
 use std::ptr;
@@ -14,16 +14,17 @@ pub struct Shader {
 
 impl Shader {
     pub fn from_file(
-        logger: &mut NestedConsoleLogger,
+        logger: &mut HTMLLogger,
         file_name: &str,
         shader_type: GLuint,
-    ) -> Shader {
+    ) -> Result<Shader, String> {
         logger.open_scope("Compiling ".yellow() + quote!(file_name).magenta());
+
         let data = match transpile_shader(logger, file_name) {
             Ok(data) => data,
             Err(e) => {
-                logger.close_scope("Compiling ".yellow() + "Failed".red());
-                panic!("{}", "! Error ! ".red() + e.as_str().red());
+                logger.error("! Error ! ".red() + e.as_str().red());
+                return Err(e);
             }
         };
         let id = unsafe { gl::CreateShader(shader_type) };
@@ -38,17 +39,15 @@ impl Shader {
 
         match check_shader(logger, id, &data) {
             Ok(_) => {
-                logger.close_scope("Compiling ".yellow() + "Successful".green());
+                logger.close_scope();
             }
             Err(e) => {
-                logger.close_scope("Compiling ".yellow() + "Failed".red());
-                logger.panic(e.as_str().red());
-                panic!("{}", "! Error ! ".red() + e.as_str().red());
+                logger.panic();
+                return Err(e);
             }
         }
-        println!();
 
-        Shader { id, data }
+        Ok(Shader { id, data })
     }
 }
 

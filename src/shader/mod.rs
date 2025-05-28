@@ -6,7 +6,7 @@ use crate::quote;
 use crate::shader::shader::Shader;
 use crate::uniform::{Uniform, UniformVariable};
 use crate::utils::colorized_text::Colorize;
-use crate::utils::nested_console_logger::NestedConsoleLogger;
+use crate::utils::html_logger::HTMLLogger;
 use gl::types::{GLchar, GLint, GLuint};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -61,16 +61,21 @@ impl ShaderProgram {
         }
     }
 
-    pub fn generate_graphics(name: &str, vertex_file: &str, fragment_file: &str) -> ShaderProgram {
-        let mut logger = NestedConsoleLogger::default();
+    #[allow(dead_code)]
+    pub fn generate_graphics(
+        name: &str,
+        vertex_file: &str,
+        fragment_file: &str,
+    ) -> Result<ShaderProgram, String> {
+        let mut logger = HTMLLogger::new(name);
         logger.open_scope("Creating ".yellow() + name.magenta());
 
-        let vertex_shader = Shader::from_file(&mut logger, &vertex_file, gl::VERTEX_SHADER);
-        let fragment_shader = Shader::from_file(&mut logger, &fragment_file, gl::FRAGMENT_SHADER);
+        let vertex_shader = Shader::from_file(&mut logger, &vertex_file, gl::VERTEX_SHADER)?;
+        let fragment_shader = Shader::from_file(&mut logger, &fragment_file, gl::FRAGMENT_SHADER)?;
 
         logger.open_scope("Program Linking ".yellow() + "Starting".green());
-        logger.info("Attaching ".blue() + quote!(vertex_file).magenta());
-        logger.info("Attaching ".blue() + quote!(fragment_file).magenta());
+        logger.info("Attaching ".cyan() + quote!(vertex_file).magenta());
+        logger.info("Attaching ".cyan() + quote!(fragment_file).magenta());
 
         let program = unsafe { gl::CreateProgram() };
         unsafe {
@@ -96,18 +101,19 @@ impl ShaderProgram {
 
         shader_program.link_all_uniforms(&mut logger);
 
-        logger.close_scope("Created ".yellow() + name.magenta() + " Successfully".yellow());
-        shader_program
+        logger.to_html();
+        Ok(shader_program)
     }
 
-    pub fn generate_compute(name: &str, compute_file: &str) -> ShaderProgram {
-        let mut logger = NestedConsoleLogger::default();
+    #[allow(dead_code)]
+    pub fn generate_compute(name: &str, compute_file: &str) -> Result<ShaderProgram, String> {
+        let mut logger = HTMLLogger::new(name);
         logger.open_scope("Creating ".yellow() + name.magenta());
 
-        let compute_shader = Shader::from_file(&mut logger, &compute_file, gl::COMPUTE_SHADER);
+        let compute_shader = Shader::from_file(&mut logger, &compute_file, gl::COMPUTE_SHADER)?;
 
         logger.open_scope("Program Linking ".yellow() + "Starting".green());
-        logger.info("Attaching ".blue() + quote!(compute_file).magenta());
+        logger.info("Attaching ".cyan() + quote!(compute_file).magenta());
 
         let program = unsafe { gl::CreateProgram() };
         unsafe {
@@ -131,7 +137,8 @@ impl ShaderProgram {
 
         shader_program.link_all_uniforms(&mut logger);
 
-        shader_program
+        logger.to_html();
+        Ok(shader_program)
     }
 
     pub fn get_uniform<T: 'static>(&mut self, name: &str) -> Option<Rc<RefCell<UniformVariable<T>>>>
@@ -157,7 +164,7 @@ impl ShaderProgram {
 }
 
 impl ShaderProgram {
-    fn link_all_uniforms(&mut self, logger: &mut NestedConsoleLogger) {
+    fn link_all_uniforms(&mut self, logger: &mut HTMLLogger) {
         logger.open_scope("Uniform Linking ".yellow() + "Starting".green());
 
         let all_uniforms = self
@@ -193,23 +200,23 @@ impl ShaderProgram {
             );
         }
 
-        logger.close_scope("Uniform Linking ".yellow() + "Successful".green());
+        logger.close_scope();
     }
 
-    fn add_uniform<T: 'static>(&mut self, logger: &mut NestedConsoleLogger, name: &str, initial: T)
+    fn add_uniform<T: 'static>(&mut self, logger: &mut HTMLLogger, name: &str, initial: T)
     where
         UniformVariable<T>: Uniform,
     {
         let uniform = UniformVariable::new(name, initial);
-        let mut ref_uniform = Rc::new(RefCell::new(uniform));
-        let successful = ref_uniform.borrow_mut().bind_program(self.id, &self.name);
+        let ref_uniform = Rc::new(RefCell::new(uniform));
+        let successful = ref_uniform.borrow_mut().bind_program(self.id);
         self.uniforms.insert(name.to_string(), ref_uniform.clone());
         match successful {
             Ok(_) => {
-                logger.info("Uniform ".blue() + quote!(name).magenta() + " found".green());
+                logger.info("Uniform ".cyan() + quote!(name).magenta() + " found".green());
             }
-            Err(e) => {
-                logger.info("Uniform ".blue() + quote!(name).magenta() + " not found".red());
+            Err(_) => {
+                logger.info("Uniform ".cyan() + quote!(name).magenta() + " not found".red());
             }
         }
     }
@@ -224,7 +231,7 @@ impl Drop for ShaderProgram {
 }
 
 /// Checks if a program has compiled successfully or not
-fn check_program(logger: &mut NestedConsoleLogger, program: GLuint) {
+fn check_program(logger: &mut HTMLLogger, program: GLuint) {
     // Success flag determines if the program compiled successfully
     let mut success: GLint = 0;
     unsafe {
@@ -254,12 +261,11 @@ fn check_program(logger: &mut NestedConsoleLogger, program: GLuint) {
             );
         }
 
-        logger.close_scope("Program Linking ".yellow() + "Unsuccessful".red());
+        logger.close_scope();
 
         let error_message = error_message.to_string_lossy().into_owned();
         panic!("{}", "! Error ! ".red() + error_message.as_str().red());
     }
 
-    logger.close_scope("Program Linking ".yellow() + "Successful".green());
-    println!();
+    logger.close_scope();
 }

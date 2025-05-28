@@ -6,6 +6,7 @@ pub struct ColoredText {
     text: String,
 }
 
+#[allow(dead_code)]
 impl ColoredText {
     fn new(text: String) -> ColoredText {
         ColoredText { text }
@@ -30,6 +31,7 @@ impl Add for ColoredText {
     }
 }
 
+#[allow(dead_code)]
 pub trait Colorize {
     fn black(&self) -> ColoredText;
     fn red(&self) -> ColoredText;

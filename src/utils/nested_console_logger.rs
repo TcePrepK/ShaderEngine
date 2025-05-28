@@ -35,6 +35,7 @@ impl Default for NestedConsoleLogger {
     }
 }
 
+#[allow(dead_code)]
 impl NestedConsoleLogger {
     pub fn log<T: Display>(&mut self, message: T) {
         println!("{}{}", "  ".repeat(self.indent), message);

@@ -1,6 +1,6 @@
 use crate::shader::transpiler::TranspiledData;
 use crate::utils::colorized_text::Colorize;
-use crate::utils::nested_console_logger::NestedConsoleLogger;
+use crate::utils::html_logger::HTMLLogger;
 use gl::types::{GLchar, GLint, GLuint};
 use regex::Regex;
 use std::collections::HashMap;
@@ -14,7 +14,7 @@ const SHADER_LINE_FORMAT: &str = r"0\((\d+)\) : error .{5}: (.+)";
 /// it will print out a well-formatted error message,
 /// which includes the line and file the error occurred on (required for #include)
 pub fn check_shader(
-    logger: &mut NestedConsoleLogger,
+    logger: &mut HTMLLogger,
     shader: GLuint,
     data: &TranspiledData,
 ) -> Result<(), String> {
@@ -59,11 +59,7 @@ pub fn check_shader(
 
 /// Handles the error message from a shader
 /// and formats it into an easy-to-understand, readable message
-fn shader_error_handler(
-    logger: &mut NestedConsoleLogger,
-    error_message: &str,
-    data: &TranspiledData,
-) {
+fn shader_error_handler(logger: &mut HTMLLogger, error_message: &str, data: &TranspiledData) {
     let line_number_regex = Regex::new(SHADER_LINE_FORMAT).unwrap();
 
     logger.open_scope("Compilation Errors".red());
@@ -90,7 +86,7 @@ fn shader_error_handler(
         errors.push((line_number, error));
     }
 
-    // Print the errors
+    // Log the errors
     for source in data.included_files.iter() {
         let errors = errors_by_source.get(source).unwrap();
         if errors.len() == 0 {
@@ -100,10 +96,10 @@ fn shader_error_handler(
         logger.open_scope(source.yellow());
         for (line_number, error) in errors.iter() {
             let actual_line_number = data.line_to_source[*line_number].1;
-            logger.log(format!("{}", actual_line_number).red() + ": ".blue() + error.white());
+            logger.log(format!("{}", actual_line_number).red() + ": ".cyan() + error.white());
         }
-        logger.close_scope("");
+        logger.close_scope();
     }
 
-    logger.close_scope("Compilation Errors".red());
+    logger.close_scope();
 }

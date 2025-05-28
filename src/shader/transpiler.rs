@@ -1,5 +1,5 @@
 use crate::utils::colorized_text::Colorize;
-use crate::utils::nested_console_logger::NestedConsoleLogger;
+use crate::utils::html_logger::HTMLLogger;
 use crate::{error, quote};
 use regex::Regex;
 use std::fs::File;
@@ -48,7 +48,7 @@ fn read_file(path: &str) -> Result<String, String> {
 
 /// Transpiles a shader file and returns the necessary information
 pub fn transpile_shader(
-    logger: &mut NestedConsoleLogger,
+    logger: &mut HTMLLogger,
     file_name: &str,
 ) -> Result<TranspiledData, String> {
     let mut data = TranspiledData {
@@ -64,16 +64,15 @@ pub fn transpile_shader(
             if data.uniforms.len() > 0 {
                 logger.open_scope("Uniforms".yellow());
                 for uniform in data.uniforms.iter() {
-                    logger.info(quote!(uniform.name).magenta() + ": ".blue() + uniform.ty.green());
+                    logger.info(quote!(uniform.name).magenta() + ": ".cyan() + uniform.ty.green());
                 }
+                logger.close_scope();
             } else {
-                logger.open_scope("No Uniforms".yellow())
+                logger.log("! ".cyan() + "No Uniforms".yellow() + " !".cyan())
             }
-            logger.close_scope("");
-            logger.close_scope("Transpiling ".yellow() + "Successful".green());
+            logger.close_scope();
         }
         Err(e) => {
-            logger.close_scope("Transpiling ".yellow() + "Failed".red());
             return Err(e);
         }
     }
@@ -82,7 +81,7 @@ pub fn transpile_shader(
 }
 
 fn handle_file(
-    logger: &mut NestedConsoleLogger,
+    logger: &mut HTMLLogger,
     file_name: &str,
     data: &mut TranspiledData,
 ) -> Result<(), String> {
@@ -90,7 +89,6 @@ fn handle_file(
 
     // Check if the file has already been included
     if data.included_files.contains(&file_name.to_string()) {
-        logger.error(quote!(file_name).magenta() + " included multiple times ".cyan());
         return Err(format!("File \"{}\" has already been included", file_name));
     }
     data.included_files.push(file_name.to_string());
