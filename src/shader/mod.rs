@@ -1,11 +1,11 @@
 mod bindable;
 mod error_handler;
-mod shader;
+mod shader_gen;
 mod transpiler;
 mod uniform;
 
 use crate::quote;
-use crate::shader::shader::Shader;
+use crate::shader::shader_gen::Shader;
 use crate::shader::uniform::{Uniform, UniformVariable};
 use crate::utils::colorized_text::Colorize;
 use crate::utils::html_logger::{HTMLLogger, Summary};
@@ -140,7 +140,7 @@ impl ShaderProgram {
     ) -> Result<ShaderProgram, String> {
         let main_scope = logger.open_scope("Creating ".yellow() + name.magenta());
 
-        let compute_shader = Shader::from_file(logger, &compute_file, gl::COMPUTE_SHADER)?;
+        let compute_shader = Shader::from_file(logger, compute_file, gl::COMPUTE_SHADER)?;
         match ShaderProgram::generate_shaders(logger, vec![(compute_file, gl::COMPUTE_SHADER)]) {
             Ok(_) => {}
             Err(e) => {
@@ -303,19 +303,19 @@ impl ShaderProgram {
         let main_scope = logger.open_scope("Reloading ".yellow() + self.name.magenta());
         match match &self.data {
             ShaderData::Compute { compute_file } => {
-                ShaderProgram::generate_compute(logger, &self.name, &compute_file)
+                ShaderProgram::generate_compute(logger, &self.name, compute_file)
             }
             ShaderData::Graphics {
                 vertex_file,
                 fragment_file,
-            } => ShaderProgram::generate_graphics(logger, &self.name, &vertex_file, &fragment_file),
+            } => ShaderProgram::generate_graphics(logger, &self.name, vertex_file, fragment_file),
         } {
             Ok(mut new_shader_program) => {
                 // In case the shader loaded correctly, check if the uniforms are the same
                 // For each old uniform, we find the corresponding new uniform
 
                 logger.open_scope("Reloading Uniforms".yellow());
-                for uniform in self.uniforms.values().into_iter() {
+                for uniform in self.uniforms.values() {
                     let uniform_str = uniform.borrow().to_string();
                     let (name, _) = uniform_str.split_once(": ").unwrap();
 

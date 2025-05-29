@@ -21,12 +21,6 @@ impl ColoredText {
     }
 }
 
-impl Into<String> for ColoredText {
-    fn into(self) -> String {
-        self.text
-    }
-}
-
 impl Display for ColoredText {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", self.text)

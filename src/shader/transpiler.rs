@@ -61,7 +61,7 @@ pub fn transpile_shader(
     logger.open_scope("Transpiling ".yellow());
     match handle_file(logger, file_name, &mut data) {
         Ok(_) => {
-            if data.uniforms.len() > 0 {
+            if !data.uniforms.is_empty() {
                 logger.open_scope("Uniforms".yellow());
                 for uniform in data.uniforms.iter() {
                     logger.info(quote!(uniform.name).magenta() + ": ".cyan() + uniform.ty.green());

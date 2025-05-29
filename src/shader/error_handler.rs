@@ -49,7 +49,7 @@ pub fn check_shader(
 
         // Format the error message and print it
         let readable_error = error_message.to_string_lossy().into_owned();
-        shader_error_handler(logger, readable_error.as_str(), &data);
+        shader_error_handler(logger, readable_error.as_str(), data);
 
         return Err("Error compiling shader".to_string());
     }
@@ -89,7 +89,7 @@ fn shader_error_handler(logger: &mut HTMLLogger, error_message: &str, data: &Tra
     // Log the errors
     for source in data.included_files.iter() {
         let errors = errors_by_source.get(source).unwrap();
-        if errors.len() == 0 {
+        if errors.is_empty() {
             continue;
         }
 

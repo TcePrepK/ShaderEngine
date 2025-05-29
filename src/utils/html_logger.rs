@@ -158,7 +158,7 @@ impl HTMLLogger {
 
 impl HTMLLogger {
     pub fn log<T: Display>(&mut self, text: T) {
-        if self.stack.len() > 0 {
+        if !self.stack.is_empty() {
             self.current_scope()
                 .borrow_mut()
                 .elements
@@ -174,7 +174,7 @@ impl HTMLLogger {
 
     pub fn info<T: Display>(&mut self, text: T) {
         let info_text = format!("{} {}", "-".cyan(), text);
-        if self.stack.len() > 0 {
+        if !self.stack.is_empty() {
             self.current_scope()
                 .borrow_mut()
                 .elements
@@ -200,7 +200,7 @@ impl HTMLLogger {
             elements: vec![],
         }));
 
-        if self.stack.len() > 0 {
+        if !self.stack.is_empty() {
             self.current_scope()
                 .borrow_mut()
                 .elements
@@ -213,7 +213,7 @@ impl HTMLLogger {
     }
 
     pub fn close_scope(&mut self) {
-        if self.stack.len() > 0 {
+        if !self.stack.is_empty() {
             self.stack.pop();
         }
     }
@@ -229,7 +229,7 @@ impl HTMLLogger {
         for element in self.elements.iter() {
             html_content += &element.borrow().to_html();
         }
-        html_content = HTML_START.to_string() + &html_content + &"</body></html>";
+        html_content = HTML_START.to_string() + &html_content + "</body></html>";
 
         // Generate the logs directory if it doesn't exist
         let logs_dir = Path::new("logs");

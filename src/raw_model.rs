@@ -26,7 +26,7 @@ impl RawModel {
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (vertices.len() * size_of::<f32>()) as GLsizeiptr,
+                size_of_val(vertices) as GLsizeiptr,
                 vertices.as_ptr() as *const raw::c_void,
                 gl::STATIC_DRAW,
             );
@@ -35,7 +35,7 @@ impl RawModel {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
-                (indices.len() * size_of::<u32>()) as GLsizeiptr,
+                size_of_val(indices) as GLsizeiptr,
                 indices.as_ptr() as *const raw::c_void,
                 gl::STATIC_DRAW,
             );

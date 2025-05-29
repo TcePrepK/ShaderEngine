@@ -61,7 +61,7 @@ impl NestedConsoleLogger {
     }
 
     pub fn open_scope<T: Display>(&mut self, message: T) {
-        if message.to_string().len() > 0 {
+        if !message.to_string().is_empty() {
             println!(
                 "{}{} {} {}",
                 "  ".repeat(self.indent),
@@ -75,7 +75,7 @@ impl NestedConsoleLogger {
 
     pub fn close_scope<T: Display>(&mut self, message: T) {
         self.indent -= 1;
-        if message.to_string().len() > 0 {
+        if !message.to_string().is_empty() {
             println!(
                 "{}{} {} {}",
                 "  ".repeat(self.indent),
