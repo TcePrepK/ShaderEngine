@@ -37,15 +37,8 @@ impl Shader {
             gl::CompileShader(id);
         }
 
-        match check_shader(logger, id, &data) {
-            Ok(_) => {
-                logger.close_scope();
-            }
-            Err(e) => {
-                logger.panic();
-                return Err(e);
-            }
-        }
+        logger.close_scope();
+        check_shader(logger, id, &data)?;
 
         Ok(Shader { id, data })
     }

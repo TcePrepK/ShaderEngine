@@ -83,8 +83,8 @@ trait HTMLElement {
     fn to_html(&self) -> String;
 }
 
-struct Summary {
-    text: String,
+pub struct Summary {
+    pub text: String,
 }
 
 impl HTMLElement for Summary {
@@ -93,7 +93,7 @@ impl HTMLElement for Summary {
     }
 }
 
-struct Paragraph {
+pub struct Paragraph {
     text: String,
 }
 
@@ -103,20 +103,24 @@ impl HTMLElement for Paragraph {
     }
 }
 
-struct Details {
+pub struct Details {
     open: bool,
+    pub summary: Summary,
     elements: Vec<Rc<RefCell<dyn HTMLElement>>>,
 }
 
 impl HTMLElement for Details {
     fn to_html(&self) -> String {
         let open_attr = if self.open { " open" } else { "" };
-        let inner_html: String = self
-            .elements
-            .iter()
-            .map(|el| el.borrow().to_html())
-            .collect::<Vec<_>>()
-            .join("\n");
+        let mut inner_html = self.summary.to_html();
+        inner_html.push_str(
+            &self
+                .elements
+                .iter()
+                .map(|el| el.borrow().to_html())
+                .collect::<Vec<_>>()
+                .join("\n"),
+        );
         format!("<details{open_attr}>\n{inner_html}\n</details>")
     }
 }
@@ -183,15 +187,17 @@ impl HTMLLogger {
 
     pub fn error<T: Display>(&mut self, text: T) {
         self.log(text);
+        self.stack.clear();
         self.to_html()
     }
 
-    pub fn open_scope<T: Display>(&mut self, text: T) {
+    pub fn open_scope<T: Display>(&mut self, text: T) -> Rc<RefCell<Details>> {
         let new_scope = Rc::new(RefCell::new(Details {
-            open: true,
-            elements: vec![Rc::new(RefCell::new(Summary {
+            open: false,
+            summary: Summary {
                 text: text.to_string(),
-            }))],
+            },
+            elements: vec![],
         }));
 
         if self.stack.len() > 0 {
@@ -202,7 +208,8 @@ impl HTMLLogger {
         } else {
             self.elements.push(new_scope.clone());
         }
-        self.stack.push(new_scope);
+        self.stack.push(new_scope.clone());
+        new_scope
     }
 
     pub fn close_scope(&mut self) {
@@ -212,6 +219,7 @@ impl HTMLLogger {
     }
 
     pub fn panic(&mut self) {
+        self.stack.clear();
         self.to_html()
     }
 

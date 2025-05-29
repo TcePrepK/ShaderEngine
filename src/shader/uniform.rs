@@ -1,28 +1,32 @@
-use crate::bindable::Bindable;
+use crate::shader::bindable::Bindable;
 use gl::types::{GLdouble, GLfloat, GLint, GLuint};
 use std::any::Any;
 use std::ffi::CString;
 
 pub struct UniformVariable<T> {
     name: String,
+    ty: String,
     location: Option<GLint>,
     bind: Bindable<T>,
 }
 
+#[allow(dead_code)]
 pub trait Uniform: Any {
     fn load_uniform(&self);
     fn is_dirty(&self) -> bool;
     fn clear_dirty(&mut self);
-    #[allow(dead_code)]
+
     fn as_any(&self) -> &dyn Any;
-    #[allow(dead_code)]
     fn as_any_mut(&mut self) -> &mut dyn Any;
+
+    fn to_string(&self) -> String;
 }
 
 impl<T> UniformVariable<T> {
-    pub fn new(name: &str, initial: T) -> UniformVariable<T> {
+    pub fn new(name: &str, ty: &str, initial: T) -> UniformVariable<T> {
         UniformVariable {
             name: name.to_string(),
+            ty: ty.to_string(),
             location: None,
             bind: Bindable::new(initial),
         }
@@ -76,6 +80,10 @@ where
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+
+    fn to_string(&self) -> String {
+        format!("{}: {}", self.name, self.ty)
     }
 }
 

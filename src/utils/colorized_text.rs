@@ -12,8 +12,18 @@ impl ColoredText {
         ColoredText { text }
     }
 
+    pub fn as_str(&self) -> &str {
+        &self.text
+    }
+
     pub fn println(&self) {
         println!("{}", self);
+    }
+}
+
+impl Into<String> for ColoredText {
+    fn into(self) -> String {
+        self.text
     }
 }
 

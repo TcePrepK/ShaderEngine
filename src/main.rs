@@ -1,15 +1,16 @@
 extern crate gl;
 extern crate sdl2;
-mod bindable;
 mod raw_model;
 mod shader;
 mod timer;
-mod uniform;
 mod utils;
 
 use crate::raw_model::RawModel;
 use crate::shader::ShaderProgram;
 use crate::timer::Timer;
+use crate::utils::html_logger::HTMLLogger;
+use sdl2::event::Event;
+use sdl2::keyboard::{Keycode, Mod};
 use sdl2::video::GLProfile;
 use std::os::raw;
 
@@ -34,8 +35,10 @@ fn main() {
         gl::ClearColor(0.0, 0.0, 0.0, 1.0);
     }
 
+    let mut html_logger = HTMLLogger::new("Quad Shader");
     let mut quad_shader =
-        ShaderProgram::generate_graphics("Quad Shader", "quad.vert", "quad.frag").unwrap();
+        ShaderProgram::generate_graphics(&mut html_logger, "Quad Shader", "quad.vert", "quad.frag")
+            .unwrap();
     let quad_model = RawModel::from_vertices(&[-1.0, -1.0, 3.0, -1.0, -1.0, 3.0], &[0, 1, 2]);
 
     let resolution_uniform = quad_shader.get_uniform::<[f32; 2]>("resolution").unwrap();
@@ -52,7 +55,20 @@ fn main() {
 
         for event in event_pump.poll_iter() {
             match event {
-                sdl2::event::Event::Quit { .. } => break 'main,
+                Event::Quit { .. } => break 'main,
+                Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'main,
+                Event::KeyDown {
+                    keycode: Some(Keycode::R),
+                    keymod,
+                    ..
+                } => {
+                    if keymod.contains(Mod::LSHIFTMOD) {
+                        quad_shader.try_reload(&mut html_logger);
+                    }
+                }
                 _ => {}
             }
         }

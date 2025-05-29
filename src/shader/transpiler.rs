@@ -58,7 +58,7 @@ pub fn transpile_shader(
         uniforms: Vec::new(),
     };
 
-    logger.open_scope("Transpiling ".yellow() + "Starting".green());
+    logger.open_scope("Transpiling ".yellow());
     match handle_file(logger, file_name, &mut data) {
         Ok(_) => {
             if data.uniforms.len() > 0 {
