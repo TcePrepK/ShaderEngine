@@ -103,10 +103,6 @@ fn handle_file(
     let uniform_pattern = Regex::new(UNIFORM_PATTERN).unwrap();
 
     for (line_number, line) in file_contents.lines().enumerate() {
-        // First things first, we add the line to the line_to_source map
-        data.line_to_source
-            .push((file_name.to_string(), line_number + 1));
-
         // The first thing we check is the ignore flag
         if ignore_start.is_match(line) {
             ignore = true;
@@ -128,6 +124,10 @@ fn handle_file(
             handle_file(logger, include_file, data)?;
             continue;
         }
+
+        // First things first, we add the line to the line_to_source map
+        data.line_to_source
+            .push((file_name.to_string(), line_number + 1));
 
         // If it isn't an import, we can add it to the transpiled source
         data.transpiled_source.push_str(line);

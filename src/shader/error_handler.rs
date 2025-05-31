@@ -81,7 +81,7 @@ fn shader_error_handler(logger: &mut HTMLLogger, error_message: &str, data: &Tra
         let line_number = capture.get(1).unwrap().as_str().parse::<usize>().unwrap();
         let error = capture.get(2).unwrap().as_str().to_string();
 
-        let (source, _) = data.line_to_source[line_number].clone();
+        let (source, _) = data.line_to_source[line_number - 1].clone();
         let errors = errors_by_source.get_mut(&source).unwrap();
         errors.push((line_number, error));
     }
@@ -95,7 +95,7 @@ fn shader_error_handler(logger: &mut HTMLLogger, error_message: &str, data: &Tra
 
         logger.open_scope(source.yellow());
         for (line_number, error) in errors.iter() {
-            let actual_line_number = data.line_to_source[*line_number].1;
+            let actual_line_number = data.line_to_source[*line_number - 1].1;
             logger.log(format!("{}", actual_line_number).red() + ": ".cyan() + error.white());
         }
         logger.close_scope();

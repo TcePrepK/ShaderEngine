@@ -5,84 +5,87 @@ uniform float time;
 
 out vec4 out_color;
 
+#define SAMPLE_PER_PIXEL 16
+#define MAX_SPHERES 4
+#define MAX_BOUNCES 10
+#define EPSILON 0.0001
+
+// No includes in these files
+#include "math.glsl"
+// Complex includes involved here
 #include "ray_utils.glsl"
+#include "hit_record.glsl"
+#include "material.glsl"
+#include "sdf_funcs.glsl"
+#include "sphere.glsl"
 
-float smootherstep(float edge0, float edge1, float x) {
-    x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
-}
+const Sphere all_spheres[MAX_SPHERES] = Sphere[](
+    Sphere(vec3(0.0, -0.01, 0.0), 0.5, Material(0, vec3(1.0, 0.0, 0.0), 0.0, 0.0)),
+    Sphere(vec3(1.2, -0.01, 0.0), 0.5, Material(0, vec3(0.0, 1.0, 0.0), 0.0, 0.0)),
+    Sphere(vec3(-1.2, -0.01, 0.0), 0.5, Material(0, vec3(0.0, 0.0, 1.0), 0.0, 0.0)),
+    Sphere(vec3(0, -500.5, 0.0), 500.0, Material(0, vec3(0.2), 0.0, 0.0))
+);
 
-vec2 smootherstep(vec2 x) {
-    return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
-}
+vec3 get_color(in Ray ray) {
+    vec3 color = vec3(1.0);
 
-vec2 hash(vec2 p) {
-    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
-}
+    Ray current_ray = ray;
+    for (int i = 0; i < MAX_BOUNCES; i++) {
+        bool hit_anything = false;
+        float closest_so_far = 1000.0;
+        HitRecord closest_hit_record = NO_HIT;
+        for (int i = 0; i < MAX_SPHERES; i++) {
+            HitRecord hit_record = sphere_hit(all_spheres[i], current_ray);
+            if (hit_record.time > 0.0) {
+                hit_anything = true;
+                if (hit_record.time < closest_so_far) {
+                    closest_so_far = hit_record.time;
+                    closest_hit_record = hit_record;
+                }
+            }
+        }
 
-vec2 perlin(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = smootherstep(f);
+        if (hit_anything) {
+            float hit_time = closest_hit_record.time;
+            if (hit_time > 0.0) {
+                Ray scattered_ray;
+                vec3 attenuation;
 
-    vec2 hash_down = mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x);
-    vec2 hash_up = mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x);
-    return mix(hash_down, hash_up, u.y);
-}
+                int material_type = closest_hit_record.material.material_type;
+                bool scattered = false;
+                if (material_type == 0) {
+                    scattered = scatter_lambertian(current_ray, closest_hit_record, closest_hit_record.material, attenuation, scattered_ray);
+                } else if (material_type == 1) {
+                    scattered = scatter_metal(current_ray, closest_hit_record, closest_hit_record.material, attenuation, scattered_ray);
+                }
 
-Ray camera_ray(vec2 pixel) {
-    float viewport_height = 2.0;
-    float viewport_width = viewport_height * resolution.x / resolution.y;
-
-    float focal_length = 1.0;
-    vec3 camera_center = vec3(0.0, 0.0, 0.0);
-
-    vec3 viewport_u = vec3(viewport_width, 0.0, 0.0);
-    vec3 viewport_v = vec3(0.0, -viewport_height, 0.0);
-
-    vec3 viewport_upper_left_corner = camera_center - vec3(0.0, 0.0, focal_length) - (viewport_u + viewport_v) / 2.0;
-    vec3 pixel_location = viewport_upper_left_corner + pixel.x * viewport_u + pixel.y * viewport_v;
-
-    return Ray(camera_center, normalize(pixel_location));
-}
-
-vec3 sky_color(Ray ray) {
-    vec3 unit_direction = normalize(ray.direction);
-    float t = 0.5 * (unit_direction.y + 1.0);
-    return mix(vec3(1.0), vec3(0.5, 0.7, 1.0), t);
-}
-
-bool hit_sphere(in vec3 origin, in float radius, in Ray ray) {
-    vec3 oc = origin - ray.origin;
-    float a = dot(ray.direction, ray.direction);
-    float b = -2.0 * dot(oc, ray.direction);
-    float c = dot(oc, oc) - radius * radius;
-    float discriminant = b * b - 4.0 * a * c;
-    if (discriminant < 0.0) {
-        return false;
+                if (scattered) {
+                    color *= attenuation;
+                    current_ray = scattered_ray;
+                }
+            }
+        } else {
+            color *= sky_color(ray);
+            break;
+        }
     }
-    float t = (-b - sqrt(discriminant)) / (2.0 * a);
-    if (t > 0.0) {
-        return true;
-    }
-    t = (-b + sqrt(discriminant)) / (2.0 * a);
-    if (t > 0.0) {
-        return true;
-    }
-    return false;
+
+    return color;
 }
 
 void main() {
     vec2 pixel = gl_FragCoord.xy / resolution;
     pixel.y = 1.0 - pixel.y;
 
-    Ray ray = camera_ray(pixel);
-    vec3 color = sky_color(ray);
-
-    if (hit_sphere(vec3(0.0, 0.0, -1.0), 0.5, ray)) {
-        color = vec3(1.0, 0.0, 0.0);
+    vec3 color = vec3(0.0);
+    for (int i = 0; i < SAMPLE_PER_PIXEL; i++) {
+        vec2 random_offset = random_vec2(pixel + i) * 0.5 / resolution;
+        vec2 offset = pixel + random_offset;
+        Ray ray = camera_ray(offset);
+        color += get_color(ray);
     }
 
-    out_color = vec4(color, 1.0);
+    vec3 final_color = color / SAMPLE_PER_PIXEL;
+    final_color = pow(final_color, vec3(1.0 / 2.2));
+    out_color = vec4(final_color, 1.0);
 }

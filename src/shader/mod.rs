@@ -140,18 +140,20 @@ impl ShaderProgram {
     ) -> Result<ShaderProgram, String> {
         let main_scope = logger.open_scope("Creating ".yellow() + name.magenta());
 
-        let compute_shader = Shader::from_file(logger, compute_file, gl::COMPUTE_SHADER)?;
-        match ShaderProgram::generate_shaders(logger, vec![(compute_file, gl::COMPUTE_SHADER)]) {
-            Ok(_) => {}
-            Err(e) => {
-                main_scope
-                    .borrow_mut()
-                    .summary
-                    .text
-                    .push_str(" Failed".red().as_str());
-                return Err(e);
-            }
-        }
+        let compute_shader =
+            match ShaderProgram::generate_shaders(logger, vec![(compute_file, gl::COMPUTE_SHADER)])
+            {
+                Ok(mut shaders) => shaders.pop().unwrap(),
+                Err(e) => {
+                    main_scope
+                        .borrow_mut()
+                        .summary
+                        .text
+                        .push_str(" Failed".red().as_str());
+                    logger.panic();
+                    return Err(e);
+                }
+            };
 
         logger.open_scope("Program Linking ".yellow() + "Starting".green());
         logger.info("Attaching ".cyan() + quote!(compute_file).magenta());

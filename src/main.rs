@@ -9,7 +9,7 @@ use crate::raw_model::RawModel;
 use crate::shader::ShaderProgram;
 use crate::timer::Timer;
 use crate::utils::html_logger::HTMLLogger;
-use sdl2::event::Event;
+use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::{Keycode, Mod};
 use sdl2::video::GLProfile;
 use std::os::raw;
@@ -20,6 +20,7 @@ fn main() {
 
     let window = video_sub_system
         .window("My Cool Screen", 800, 800)
+        .resizable()
         .opengl()
         .build()
         .unwrap();
@@ -60,6 +61,20 @@ fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'main,
+                Event::Window { win_event, .. } => match win_event {
+                    WindowEvent::Resized(width, height) => {
+                        // When resize happens, update the viewport and resolution uniform
+                        resolution_uniform
+                            .borrow_mut()
+                            .get_bind()
+                            .set([width as f32, height as f32]);
+
+                        unsafe {
+                            gl::Viewport(0, 0, width, height);
+                        }
+                    }
+                    _ => {}
+                },
                 Event::KeyDown {
                     keycode: Some(Keycode::R),
                     keymod,
