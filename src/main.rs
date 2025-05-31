@@ -61,20 +61,20 @@ fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'main,
-                Event::Window { win_event, .. } => match win_event {
-                    WindowEvent::Resized(width, height) => {
-                        // When resize happens, update the viewport and resolution uniform
-                        resolution_uniform
-                            .borrow_mut()
-                            .get_bind()
-                            .set([width as f32, height as f32]);
+                Event::Window {
+                    win_event: WindowEvent::Resized(width, height),
+                    ..
+                } => {
+                    // When resize happens, update the viewport and resolution uniform
+                    resolution_uniform
+                        .borrow_mut()
+                        .get_bind()
+                        .set([width as f32, height as f32]);
 
-                        unsafe {
-                            gl::Viewport(0, 0, width, height);
-                        }
+                    unsafe {
+                        gl::Viewport(0, 0, width, height);
                     }
-                    _ => {}
-                },
+                }
                 Event::KeyDown {
                     keycode: Some(Keycode::R),
                     keymod,
