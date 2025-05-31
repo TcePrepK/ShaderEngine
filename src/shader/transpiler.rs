@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-const FILE_PREFIX: &str = "res/shaders/";
+pub const SHADER_FILE_PREFIX: &str = "res/shaders/";
 const IGNORE_START: &str = r"\/\*\s*<ignore>\s*\*\/";
 const IGNORE_END: &str = r"\/\*\s*<\/ignore>\s*\*\/";
 const INCLUDE_PATTERN: &str = r####"#include\s+\"(.+)\""####;
@@ -31,7 +31,7 @@ pub struct TranspiledUniform {
 
 /// Reads a file and returns its contents as a string
 fn read_file(path: &str) -> Result<String, String> {
-    let full_path = Path::new(FILE_PREFIX).join(path).canonicalize();
+    let full_path = Path::new(SHADER_FILE_PREFIX).join(path).canonicalize();
     match full_path {
         Ok(path) => {
             let mut file = File::open(path).unwrap();

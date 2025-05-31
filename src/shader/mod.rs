@@ -300,8 +300,28 @@ impl ShaderProgram {
 }
 
 impl ShaderProgram {
+    /// Sets up the file watchers for the shaders, so whenever a file is updated, the shaders are reloaded
+    pub fn check_watchers(&mut self, logger: &mut HTMLLogger) {
+        let mut any_updated = false;
+        for shader in self.shaders.iter_mut() {
+            for watcher in shader.watchers.iter_mut() {
+                let updated = watcher.update();
+                if !updated {
+                    continue;
+                }
+
+                any_updated = true;
+                logger.info("Update on ".cyan() + quote!(watcher.path).magenta());
+            }
+        }
+
+        if any_updated {
+            self.try_reload(logger);
+        }
+    }
+
     /// Tries to reload the shaders
-    pub fn try_reload(&mut self, logger: &mut HTMLLogger) {
+    fn try_reload(&mut self, logger: &mut HTMLLogger) {
         let main_scope = logger.open_scope("Reloading ".yellow() + self.name.magenta());
         match match &self.data {
             ShaderData::Compute { compute_file } => {

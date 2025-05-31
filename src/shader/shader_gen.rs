@@ -1,7 +1,8 @@
 use crate::quote;
 use crate::shader::error_handler::check_shader;
-use crate::shader::transpiler::{transpile_shader, TranspiledData};
+use crate::shader::transpiler::{transpile_shader, TranspiledData, SHADER_FILE_PREFIX};
 use crate::utils::colorized_text::Colorize;
+use crate::utils::file_watcher::FileWatcher;
 use crate::utils::html_logger::HTMLLogger;
 use gl::types::GLuint;
 use std::ffi::CString;
@@ -10,6 +11,7 @@ use std::ptr;
 pub struct Shader {
     pub(crate) id: GLuint,
     pub(crate) data: TranspiledData,
+    pub(crate) watchers: Vec<FileWatcher>,
 }
 
 impl Shader {
@@ -40,7 +42,9 @@ impl Shader {
         logger.close_scope();
         check_shader(logger, id, &data)?;
 
-        Ok(Shader { id, data })
+        let watchers = get_file_watchers(&data.included_files);
+
+        Ok(Shader { id, data, watchers })
     }
 }
 
@@ -50,4 +54,12 @@ impl Drop for Shader {
             gl::DeleteShader(self.id);
         }
     }
+}
+
+fn get_file_watchers(files: &Vec<String>) -> Vec<FileWatcher> {
+    let mut watchers = Vec::new();
+    for file in files.iter() {
+        watchers.push(FileWatcher::new(SHADER_FILE_PREFIX.to_owned() + file));
+    }
+    watchers
 }

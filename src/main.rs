@@ -10,7 +10,7 @@ use crate::shader::ShaderProgram;
 use crate::timer::Timer;
 use crate::utils::html_logger::HTMLLogger;
 use sdl2::event::{Event, WindowEvent};
-use sdl2::keyboard::{Keycode, Mod};
+use sdl2::keyboard::Keycode;
 use sdl2::video::GLProfile;
 use std::os::raw;
 
@@ -75,15 +75,6 @@ fn main() {
                         gl::Viewport(0, 0, width, height);
                     }
                 }
-                Event::KeyDown {
-                    keycode: Some(Keycode::R),
-                    keymod,
-                    ..
-                } => {
-                    if keymod.contains(Mod::LSHIFTMOD) {
-                        quad_shader.try_reload(&mut html_logger);
-                    }
-                }
                 _ => {}
             }
         }
@@ -92,11 +83,15 @@ fn main() {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
+        // Rendering part
         quad_shader.toggle_use();
         quad_model.render();
         quad_shader.toggle_use();
 
         window.gl_swap_window();
+
+        // Check shaders for updates, this function updates the shaders if any change is detected
+        quad_shader.check_watchers(&mut html_logger);
 
         let mut ref_timer = time_uniform.borrow_mut();
         let timer_bind = ref_timer.get_bind();
