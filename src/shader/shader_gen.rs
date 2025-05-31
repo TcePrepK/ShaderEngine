@@ -25,7 +25,8 @@ impl Shader {
         let data = match transpile_shader(logger, file_name) {
             Ok(data) => data,
             Err(e) => {
-                logger.error("! Error ! ".red() + e.as_str().red());
+                logger.close_scope();
+                logger.error(e.as_str().red());
                 return Err(e);
             }
         };

@@ -89,7 +89,7 @@ fn handle_file(
 
     // Check if the file has already been included
     if data.included_files.contains(&file_name.to_string()) {
-        return Err(format!("File \"{}\" has already been included", file_name));
+        return Err(format!("\"{}\" included multiple times", file_name));
     }
     data.included_files.push(file_name.to_string());
 
