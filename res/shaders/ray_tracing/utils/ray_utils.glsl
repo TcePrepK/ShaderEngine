@@ -1,7 +1,3 @@
-/* <ignore> */
-#include "math.glsl"
-/* </ignore> */
-
 struct Ray {
     vec2 pixel;
     vec3 origin;
@@ -23,7 +19,7 @@ const float verticel_fov = 90.0;
 const vec3 look_at = vec3(0.0, 0.0, 0.0);
 const vec3 up = vec3(0.0, 1.0, 0.0);
 
-Ray camera_ray(in vec2 pixel) {
+Ray camera_ray(in vec2 pixel, in vec2 resolution, in float time) {
     float rotation_time = time * 0.5;
     vec3 look_from = vec3(cos(rotation_time), 0.5, sin(rotation_time)) * 3.0; // Camera position
 

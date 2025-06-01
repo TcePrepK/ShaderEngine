@@ -1,11 +1,7 @@
-/* <ignore> */
-#include "ray_utils.glsl"
-/* </ignore> */
-
-float sdf_sphere(in vec3 origin, in float radius, in Ray ray) {
-    vec3 oc = origin - ray.origin;
-    float a = dot(ray.direction, ray.direction);
-    float h = dot(ray.direction, oc);
+float sdf_sphere(in vec3 origin, in float radius, in vec3 ray_origin, in vec3 ray_direction) {
+    vec3 oc = origin - ray_origin;
+    float a = dot(ray_direction, ray_direction);
+    float h = dot(ray_direction, oc);
     float c = dot(oc, oc) - radius * radius;
     float discriminant = h * h - a * c;
 

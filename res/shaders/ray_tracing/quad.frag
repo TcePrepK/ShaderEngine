@@ -11,12 +11,12 @@ out vec4 out_color;
 #define EPSILON 0.0001
 
 // No includes in these files
-#include "math.glsl"
+#include "utils/math.glsl"
+#include "utils/sdf_funcs.glsl"
+#include "utils/ray_utils.glsl"
 // Complex includes involved here
-#include "ray_utils.glsl"
 #include "hit_record.glsl"
 #include "material.glsl"
-#include "sdf_funcs.glsl"
 #include "sphere.glsl"
 
 const Sphere all_spheres[MAX_SPHERES] = Sphere[](
@@ -88,7 +88,7 @@ void main() {
     for (int i = 0; i < SAMPLE_PER_PIXEL; i++) {
         vec2 random_offset = random_vec2(pixel + i) * 0.5 / resolution;
         vec2 offset = pixel + random_offset;
-        Ray ray = camera_ray(offset);
+        Ray ray = camera_ray(offset, resolution, time);
         color += get_color(ray);
     }
 

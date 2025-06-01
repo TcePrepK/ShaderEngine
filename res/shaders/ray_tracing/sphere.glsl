@@ -1,6 +1,6 @@
 /* <ignore> */
 #include "material.glsl"
-#include "sdf_funcs.glsl"
+#include "utils/sdf_funcs.glsl"
 /* </ignore> */
 
 struct Sphere {
@@ -10,7 +10,7 @@ struct Sphere {
 };
 
 HitRecord sphere_hit(in Sphere sphere, in Ray ray) {
-    float time = sdf_sphere(sphere.center, sphere.radius, ray);
+    float time = sdf_sphere(sphere.center, sphere.radius, ray.origin, ray.direction);
     if (time > EPSILON) {
         vec3 position = ray_step(ray, time);
         vec3 normal = normalize(position - sphere.center);

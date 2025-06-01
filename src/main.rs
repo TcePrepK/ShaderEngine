@@ -37,9 +37,13 @@ fn main() {
     }
 
     let mut html_logger = HTMLLogger::new("Quad Shader");
-    let mut quad_shader =
-        ShaderProgram::generate_graphics(&mut html_logger, "Quad Shader", "quad.vert", "quad.frag")
-            .unwrap();
+    let mut quad_shader = ShaderProgram::generate_graphics(
+        &mut html_logger,
+        "Quad Shader",
+        "ray_tracing/quad.vert",
+        "ray_tracing/quad.frag",
+    )
+    .unwrap();
     let quad_model = RawModel::from_vertices(&[-1.0, -1.0, 3.0, -1.0, -1.0, 3.0], &[0, 1, 2]);
 
     let resolution_uniform = quad_shader.get_uniform::<[f32; 2]>("resolution").unwrap();

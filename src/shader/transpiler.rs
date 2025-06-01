@@ -82,18 +82,18 @@ pub fn transpile_shader(
 
 fn handle_file(
     logger: &mut HTMLLogger,
-    file_name: &str,
+    file_path: &str,
     data: &mut TranspiledData,
 ) -> Result<(), String> {
-    logger.info("Including ".cyan() + quote!(file_name).magenta());
+    logger.info("Including ".cyan() + quote!(file_path).magenta());
 
     // Check if the file has already been included
-    if data.included_files.contains(&file_name.to_string()) {
-        return Err(format!("\"{}\" included multiple times", file_name));
+    if data.included_files.contains(&file_path.to_string()) {
+        return Err(format!("\"{}\" included multiple times", file_path));
     }
-    data.included_files.push(file_name.to_string());
+    data.included_files.push(file_path.to_string());
 
-    let file_contents = read_file(file_name)?;
+    let file_contents = read_file(file_path)?;
     let mut ignore = false;
 
     // Turn the regex strings into regex objects that rust can use
@@ -102,6 +102,7 @@ fn handle_file(
     let include_pattern = Regex::new(INCLUDE_PATTERN).unwrap();
     let uniform_pattern = Regex::new(UNIFORM_PATTERN).unwrap();
 
+    let (file_base, file_name) = file_path.split_once('/').unwrap();
     for (line_number, line) in file_contents.lines().enumerate() {
         // The first thing we check is the ignore flag
         if ignore_start.is_match(line) {
@@ -121,13 +122,14 @@ fn handle_file(
             }
 
             let include_file = include_capture.get(1).unwrap().as_str();
-            handle_file(logger, include_file, data)?;
+            let new_file_path = format!("{}/{}", file_base, include_file);
+            handle_file(logger, &new_file_path, data)?;
             continue;
         }
 
         // First things first, we add the line to the line_to_source map
         data.line_to_source
-            .push((file_name.to_string(), line_number + 1));
+            .push((file_path.to_string(), line_number + 1));
 
         // If it isn't an import, we can add it to the transpiled source
         data.transpiled_source.push_str(line);
