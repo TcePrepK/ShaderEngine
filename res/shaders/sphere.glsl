@@ -16,6 +16,6 @@ HitRecord sphere_hit(in Sphere sphere, in Ray ray) {
         vec3 normal = normalize(position - sphere.center);
         return HitRecord(position, normal, time, sphere.material);
     } else {
-        return HitRecord(vec3(0.0), vec3(0.0), 0.0, sphere.material);
+        return NO_HIT;
     }
 }

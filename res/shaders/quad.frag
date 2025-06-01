@@ -7,7 +7,7 @@ out vec4 out_color;
 
 #define SAMPLE_PER_PIXEL 16
 #define MAX_SPHERES 4
-#define MAX_BOUNCES 10
+#define MAX_BOUNCES 20
 #define EPSILON 0.0001
 
 // No includes in these files
@@ -20,53 +20,60 @@ out vec4 out_color;
 #include "sphere.glsl"
 
 const Sphere all_spheres[MAX_SPHERES] = Sphere[](
-    Sphere(vec3(0.0, -0.01, 0.0), 0.5, Material(0, vec3(1.0, 0.0, 0.0), 0.0, 0.0)),
-    Sphere(vec3(1.2, -0.01, 0.0), 0.5, Material(0, vec3(0.0, 1.0, 0.0), 0.0, 0.0)),
-    Sphere(vec3(-1.2, -0.01, 0.0), 0.5, Material(0, vec3(0.0, 0.0, 1.0), 0.0, 0.0)),
-    Sphere(vec3(0, -500.5, 0.0), 500.0, Material(0, vec3(0.2), 0.0, 0.0))
+    Sphere(vec3(0.0, -0.01, 0.0), 0.5, Material(1, vec3(1.0, 0.1, 0.1), 0.0, 0.0)),
+    Sphere(vec3(1.2, -0.01, 0.0), 0.5, Material(0, vec3(0.1, 1.0, 0.1), 0.0, 0.0)),
+    Sphere(vec3(-1.2, -0.01, 0.0), 0.5, Material(0, vec3(0.1, 0.1, 1.0), 0.0, 0.0)),
+    Sphere(vec3(0, -500.5, 0.0), 500.0, Material(1, vec3(0.2), 0.0, 0.0))
 );
+
+HitRecord check_world(in Ray ray) {
+    float closest_so_far = 1000.0;
+    HitRecord closest_hit_record = NO_HIT;
+    for (int i = 0; i < MAX_SPHERES; i++) {
+        HitRecord hit_record = sphere_hit(all_spheres[i], ray);
+        if (hit_record.time > 0.0) {
+            if (hit_record.time < closest_so_far) {
+                closest_so_far = hit_record.time;
+                closest_hit_record = hit_record;
+            }
+        }
+    }
+
+    return closest_hit_record;
+}
 
 vec3 get_color(in Ray ray) {
     vec3 color = vec3(1.0);
 
+    int total_bounces = 0;
     Ray current_ray = ray;
     for (int i = 0; i < MAX_BOUNCES; i++) {
-        bool hit_anything = false;
-        float closest_so_far = 1000.0;
-        HitRecord closest_hit_record = NO_HIT;
-        for (int i = 0; i < MAX_SPHERES; i++) {
-            HitRecord hit_record = sphere_hit(all_spheres[i], current_ray);
-            if (hit_record.time > 0.0) {
-                hit_anything = true;
-                if (hit_record.time < closest_so_far) {
-                    closest_so_far = hit_record.time;
-                    closest_hit_record = hit_record;
-                }
-            }
-        }
+        HitRecord closest_hit = check_world(current_ray);
+        total_bounces++;
 
-        if (hit_anything) {
-            float hit_time = closest_hit_record.time;
-            if (hit_time > 0.0) {
-                Ray scattered_ray;
-                vec3 attenuation;
-
-                int material_type = closest_hit_record.material.material_type;
-                bool scattered = false;
-                if (material_type == 0) {
-                    scattered = scatter_lambertian(current_ray, closest_hit_record, closest_hit_record.material, attenuation, scattered_ray);
-                } else if (material_type == 1) {
-                    scattered = scatter_metal(current_ray, closest_hit_record, closest_hit_record.material, attenuation, scattered_ray);
-                }
-
-                if (scattered) {
-                    color *= attenuation;
-                    current_ray = scattered_ray;
-                }
-            }
-        } else {
+        if (closest_hit == NO_HIT) {
             color *= sky_color(ray);
             break;
+        }
+
+        float hit_time = closest_hit.time;
+        if (hit_time > 0.0) {
+            Ray scattered_ray;
+            vec3 attenuation;
+
+            Material material = closest_hit.material;
+            int material_type = material.material_type;
+            bool scattered;
+            if (material_type == 0) {
+                scattered = scatter_lambertian(current_ray, closest_hit, material, attenuation, scattered_ray);
+            } else if (material_type == 1) {
+                scattered = scatter_metal(current_ray, closest_hit, material, attenuation, scattered_ray);
+            }
+
+            if (scattered) {
+                color *= attenuation;
+                current_ray = scattered_ray;
+            }
         }
     }
 

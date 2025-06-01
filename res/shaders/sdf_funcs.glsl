@@ -12,8 +12,10 @@ float sdf_sphere(in vec3 origin, in float radius, in Ray ray) {
     if (discriminant < 0.0) {
         return -1.0;
     } else {
-        float root_a = (h - sqrt(discriminant)) / a;
-        float root_b = (h + sqrt(discriminant)) / a;
+        float l = h / a;
+        float r = sqrt(discriminant) / a;
+        float root_a = l - r;
+        float root_b = l + r;
         if (root_a > EPSILON) {
             return root_a;
         } else {
