@@ -57,7 +57,7 @@ impl Drop for Shader {
     }
 }
 
-fn get_file_watchers(files: &Vec<String>) -> Vec<FileWatcher> {
+fn get_file_watchers(files: &[String]) -> Vec<FileWatcher> {
     let mut watchers = Vec::new();
     for file in files.iter() {
         watchers.push(FileWatcher::new(SHADER_FILE_PREFIX.to_owned() + file));

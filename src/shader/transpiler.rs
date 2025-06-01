@@ -102,7 +102,7 @@ fn handle_file(
     let include_pattern = Regex::new(INCLUDE_PATTERN).unwrap();
     let uniform_pattern = Regex::new(UNIFORM_PATTERN).unwrap();
 
-    let (file_base, file_name) = file_path.split_once('/').unwrap();
+    let (file_base, _) = file_path.split_once('/').unwrap();
     for (line_number, line) in file_contents.lines().enumerate() {
         // The first thing we check is the ignore flag
         if ignore_start.is_match(line) {
