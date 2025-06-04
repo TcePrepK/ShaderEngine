@@ -13,13 +13,13 @@ layout (r32f, binding = 1) uniform image2D frame_counter;
 #define MAX_FRAMES 4
 
 // No includes in these files
-#include "../utils/math.glsl"
-#include "../utils/sdf_funcs.glsl"
-#include "../utils/ray_utils.glsl"
+#include "utils/math.glsl"
+#include "utils/sdf_funcs.glsl"
+#include "utils/ray_utils.glsl"
 // Complex includes involved here
-#include "hit_record.glsl"
-#include "material.glsl"
-#include "sphere.glsl"
+#include "ray_tracing/hit_record.glsl"
+#include "ray_tracing/material.glsl"
+#include "ray_tracing/sphere.glsl"
 
 const Sphere all_spheres[MAX_SPHERES] = Sphere[](
     Sphere(vec3(0.0, -0.01, 0.0), 0.5, Material(1, vec3(1.0, 0.1, 0.1), 0.0, 0.0)),

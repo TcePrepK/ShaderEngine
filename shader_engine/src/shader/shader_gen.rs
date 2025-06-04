@@ -43,6 +43,7 @@ impl Shader {
         logger.close_scope();
         check_shader(logger, id, &data)?;
 
+        // Create a watcher for the file
         let watchers = get_file_watchers(&data.included_files);
 
         Ok(Shader { id, data, watchers })

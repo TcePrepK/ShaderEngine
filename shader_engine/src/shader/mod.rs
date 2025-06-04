@@ -4,7 +4,6 @@ mod shader_gen;
 mod transpiler;
 mod uniform;
 
-use crate::image_buffer::{Image1D, Image2D, Image3D};
 use crate::quote;
 use crate::shader::shader_gen::Shader;
 use crate::shader::uniform::{Uniform, UniformVariable};
@@ -283,12 +282,12 @@ impl<ST: ShaderType> ShaderProgram<ST> {
                 "dvec4" => self.add_uniform::<[f64; 4]>(logger, &uniform.name, "dvec4", [0.0; 4]),
 
                 // Images and samplers
-                "image1D" => self.add_image::<Image1D>(logger, &uniform.name),
-                "image2D" => self.add_image::<Image2D>(logger, &uniform.name),
-                "image3D" => self.add_image::<Image3D>(logger, &uniform.name),
-                "sampler1D" => self.add_image::<Image1D>(logger, &uniform.name),
-                "sampler2D" => self.add_image::<Image2D>(logger, &uniform.name),
-                "sampler3D" => self.add_image::<Image3D>(logger, &uniform.name),
+                "image1D" => self.add_image(logger, &uniform.name),
+                "image2D" => self.add_image(logger, &uniform.name),
+                "image3D" => self.add_image(logger, &uniform.name),
+                "sampler1D" => self.add_image(logger, &uniform.name),
+                "sampler2D" => self.add_image(logger, &uniform.name),
+                "sampler3D" => self.add_image(logger, &uniform.name),
                 _ => panic!("Unknown uniform type: {}", uniform.ty),
             }
         }
@@ -335,11 +334,10 @@ impl<ST: ShaderType> ShaderProgram<ST> {
         }
     }
 
-    fn add_image<T: 'static>(&mut self, logger: &mut HTMLLogger, name: &str) {
+    fn add_image(&mut self, logger: &mut HTMLLogger, name: &str) {
         let uniform_name = CString::new(name).unwrap();
         let location = unsafe { gl::GetUniformLocation(self.id, uniform_name.as_ptr()) };
         self.images.insert(name.to_string(), location);
-        println!("{}", location);
     }
 
     pub fn get_image_location(&self, name: &str) -> Option<GLint> {

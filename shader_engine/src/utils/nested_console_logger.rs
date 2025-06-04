@@ -8,17 +8,6 @@ macro_rules! quote {
     };
 }
 
-#[macro_export]
-macro_rules! error {
-    ($($arg:tt)*) => {
-        {
-            use std::io::Write;
-            let mut buffer = std::io::stderr();
-            writeln!(buffer, "\x1b[91merror:\x1b[0m {}", format_args!($($arg)*)).unwrap();
-        }
-    };
-}
-
 pub struct NestedConsoleLogger {
     indent: usize,
     header_fixes: (String, String),

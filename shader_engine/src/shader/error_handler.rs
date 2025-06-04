@@ -26,14 +26,14 @@ pub fn check_shader(
 
     // If the shader failed to compile, success will be 0
     if success == 0 {
-        // Get the length of the error message using `gl::GetShaderiv`
+        // Get the length of the error message
         let mut len: GLint = 0;
         unsafe {
             gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
         }
 
-        // Create a buffer out of the length of the error message, gl functions require null terminated strings
-        // This is why we create a CString from the buffer
+        // Create a buffer out of the length of the error message.
+        // gl functions require null terminated strings, so we create a CString from the buffer
         let mut buffer: Vec<u8> = Vec::with_capacity(len as usize + 1);
         buffer.extend([b' '].iter().cycle().take(len as usize));
         let error_message = unsafe { CString::from_vec_unchecked(buffer) };

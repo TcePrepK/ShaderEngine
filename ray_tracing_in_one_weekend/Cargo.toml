@@ -1,0 +1,9 @@
+[package]
+name = "ray_tracing_in_one_weekend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gl = "0.14.0"
+sdl2 = "0.37.0"
+shader_engine = { path = "../shader_engine" }

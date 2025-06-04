@@ -11,7 +11,17 @@ impl Timer {
         }
     }
 
+    pub fn update(&mut self) {
+        self.start = Instant::now();
+    }
+
     pub fn elapsed(&self) -> f64 {
         self.start.elapsed().as_secs_f64()
+    }
+}
+
+impl Default for Timer {
+    fn default() -> Self {
+        Self::new()
     }
 }
