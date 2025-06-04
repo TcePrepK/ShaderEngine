@@ -92,6 +92,7 @@ pub trait LoadableUniform {
 }
 
 macro_rules! impl_uniform_loader {
+    // For loading literals
     ($ty:ty, [1], $gl_func:ident, $gl_type:ty) => {
         impl LoadableUniform for UniformVariable<$ty> {
             fn load_uniform(&self) {
@@ -102,6 +103,7 @@ macro_rules! impl_uniform_loader {
         }
     };
 
+    // For loading vectors
     ($ty:ty, [$len:expr], $gl_func:ident, $gl_type:ty) => {
         impl LoadableUniform for UniformVariable<[$ty; $len]> {
             fn load_uniform(&self) {

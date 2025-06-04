@@ -1,7 +1,7 @@
 use crate::utils::colorized_text::Colorize;
 use crate::utils::html_logger::HTMLLogger;
 use crate::{error, quote};
-use regex::Regex;
+use regex::{Captures, Regex};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -100,9 +100,8 @@ fn handle_file(
     let ignore_start = Regex::new(IGNORE_START).unwrap();
     let ignore_end = Regex::new(IGNORE_END).unwrap();
     let include_pattern = Regex::new(INCLUDE_PATTERN).unwrap();
-    let uniform_pattern = Regex::new(UNIFORM_PATTERN).unwrap();
 
-    let (file_base, _) = file_path.split_once('/').unwrap();
+    let file_base = file_path.split_once('/').unwrap_or(("", "")).0;
     for (line_number, line) in file_contents.lines().enumerate() {
         // The first thing we check is the ignore flag
         if ignore_start.is_match(line) {
@@ -114,16 +113,12 @@ fn handle_file(
         }
 
         // Then we check for the imports
-        let include_capture = include_pattern.captures(line);
-        if let Some(include_capture) = include_capture {
-            // If we are ignoring, straight up skip the line
+        if let Some(capture) = include_pattern.captures(line) {
             if ignore {
                 continue;
             }
 
-            let include_file = include_capture.get(1).unwrap().as_str();
-            let new_file_path = format!("{}/{}", file_base, include_file);
-            handle_file(logger, &new_file_path, data)?;
+            include_capture(logger, line, &capture, file_base, data)?;
             continue;
         }
 
@@ -136,16 +131,41 @@ fn handle_file(
         data.transpiled_source.push('\n');
 
         // Then we check for the uniforms
-        let uniform_capture = uniform_pattern.captures(line);
-        if let Some(uniform_capture) = uniform_capture {
-            let uniform_type = uniform_capture.get(1).unwrap().as_str();
-            let uniform_name = uniform_capture.get(2).unwrap().as_str();
-            data.uniforms.push(TranspiledUniform {
-                name: uniform_name.to_string(),
-                ty: uniform_type.to_string(),
-            });
-        }
+        uniform_capture(line, data);
     }
 
     Ok(())
+}
+
+fn include_capture(
+    logger: &mut HTMLLogger,
+    line: &str,
+    capture: &Captures,
+    file_base: &str,
+    data: &mut TranspiledData,
+) -> Result<(), String> {
+    if line.starts_with("//") {
+        return Ok(());
+    }
+
+    let include_file = capture.get(1).unwrap().as_str();
+    let new_file_path = format!("{}/{}", file_base, include_file);
+    handle_file(logger, &new_file_path, data)
+}
+
+fn uniform_capture(line: &str, data: &mut TranspiledData) {
+    if line.starts_with("//") {
+        return;
+    }
+
+    let uniform_pattern = Regex::new(UNIFORM_PATTERN).unwrap();
+    let uniform_capture = uniform_pattern.captures(line);
+    if let Some(uniform_capture) = uniform_capture {
+        let uniform_type = uniform_capture.get(1).unwrap().as_str();
+        let uniform_name = uniform_capture.get(2).unwrap().as_str();
+        data.uniforms.push(TranspiledUniform {
+            name: uniform_name.to_string(),
+            ty: uniform_type.to_string(),
+        });
+    }
 }

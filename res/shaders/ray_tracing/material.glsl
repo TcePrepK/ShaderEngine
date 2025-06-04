@@ -1,6 +1,6 @@
 /* <ignore> */
-#include "utils/math.glsl"
-#include "utils/ray_utils.glsl"
+#include "../utils/math.glsl"
+#include "../utils/ray_utils.glsl"
 #include "hit_record.glsl"
 /* </ignore> */
 

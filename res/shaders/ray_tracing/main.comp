@@ -1,19 +1,21 @@
 #version 460 core
+layout (local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
 uniform vec2 resolution;
 uniform float time;
-
-out vec4 out_color;
+layout (rgba32f, binding = 0) uniform image2D screen;
+layout (r32f, binding = 1) uniform image2D frame_counter;
 
 #define SAMPLE_PER_PIXEL 16
 #define MAX_SPHERES 4
-#define MAX_BOUNCES 20
+#define MAX_BOUNCES 5
 #define EPSILON 0.0001
+#define MAX_FRAMES 4
 
 // No includes in these files
-#include "utils/math.glsl"
-#include "utils/sdf_funcs.glsl"
-#include "utils/ray_utils.glsl"
+#include "../utils/math.glsl"
+#include "../utils/sdf_funcs.glsl"
+#include "../utils/ray_utils.glsl"
 // Complex includes involved here
 #include "hit_record.glsl"
 #include "material.glsl"
@@ -81,7 +83,8 @@ vec3 get_color(in Ray ray) {
 }
 
 void main() {
-    vec2 pixel = gl_FragCoord.xy / resolution;
+    ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+    vec2 pixel = vec2(pixel_coords) / resolution;
     pixel.y = 1.0 - pixel.y;
 
     vec3 color = vec3(0.0);
@@ -94,5 +97,33 @@ void main() {
 
     vec3 final_color = color / SAMPLE_PER_PIXEL;
     final_color = pow(final_color, vec3(1.0 / 2.2));
-    out_color = vec4(final_color, 1.0);
+
+    // Get previous frame color
+    vec3 prev_color = imageLoad(screen, pixel_coords).rgb;
+
+    // Get the difference between the two colors
+    vec3 difference = abs(final_color - prev_color);
+    float difference_sum = length(difference);
+
+    float frame_count = imageLoad(frame_counter, pixel_coords).r * MAX_FRAMES;
+    if (difference_sum > 0.2) {
+        // If the difference is greater than 0.01, we will reset the pixel
+        imageStore(screen, pixel_coords, vec4(final_color, 1.0));
+
+        frame_count = 0.0;
+    } else {
+        // If the difference is less than 0.01, we will blend the accumulated color and the current color
+        vec3 blended_color = mix(final_color, prev_color, frame_count / (frame_count + 1.0));
+        imageStore(screen, pixel_coords, vec4(blended_color, 1.0));
+
+        frame_count += 1.0;
+    }
+
+    // Write the frame count to the frame_counter image
+    if (frame_count > MAX_FRAMES) {
+        frame_count = MAX_FRAMES;
+    }
+    float final_frame_count = frame_count / MAX_FRAMES;
+    //    float final_frame_count = difference_sum > 0.25 ? 0.0 : 1.0;
+    imageStore(frame_counter, pixel_coords, vec4(final_frame_count, 0.0, 0.0, 1.0));
 }

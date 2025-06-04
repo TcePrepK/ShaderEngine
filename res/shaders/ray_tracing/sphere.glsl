@@ -1,6 +1,6 @@
 /* <ignore> */
 #include "material.glsl"
-#include "utils/sdf_funcs.glsl"
+#include "../utils/sdf_funcs.glsl"
 /* </ignore> */
 
 struct Sphere {

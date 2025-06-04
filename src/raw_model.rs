@@ -7,6 +7,7 @@ pub struct RawModel {
     size: GLint,
 }
 
+#[allow(dead_code)]
 impl RawModel {
     pub fn from_vertices(vertices: &[f32], indices: &[u32]) -> RawModel {
         let mut vbo: GLuint = 0;
