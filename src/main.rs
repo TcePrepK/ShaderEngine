@@ -163,6 +163,6 @@ fn main() {
 
         let mut ref_timer = time_uniform.borrow_mut();
         let timer_bind = ref_timer.get_bind();
-        *timer_bind += timer.elapsed() as f32;!
+        *timer_bind += timer.elapsed() as f32;
     }
 }
