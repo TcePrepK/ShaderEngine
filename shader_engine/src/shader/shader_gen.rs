@@ -1,6 +1,6 @@
 use crate::quote;
 use crate::shader::error_handler::check_shader;
-use crate::shader::transpiler::{transpile_shader, TranspiledData, SHADER_FILE_PREFIX};
+use crate::shader::preprocessor::{process_shader, ProcessData, SHADER_FILE_PREFIX};
 use crate::utils::colorized_text::Colorize;
 use crate::utils::file_watcher::FileWatcher;
 use crate::utils::html_logger::HTMLLogger;
@@ -10,7 +10,7 @@ use std::ptr;
 
 pub struct Shader {
     pub(crate) id: GLuint,
-    pub(crate) data: TranspiledData,
+    pub(crate) data: ProcessData,
     pub(crate) watchers: Vec<FileWatcher>,
 }
 
@@ -22,7 +22,7 @@ impl Shader {
     ) -> Result<Shader, String> {
         logger.open_scope("Compiling ".yellow() + quote!(file_name).magenta());
 
-        let data = match transpile_shader(logger, file_name) {
+        let data = match process_shader(logger, file_name) {
             Ok(data) => data,
             Err(e) => {
                 logger.close_scope();
@@ -32,7 +32,7 @@ impl Shader {
         };
         let id = unsafe { gl::CreateShader(shader_type) };
 
-        let source = data.transpiled_source.bytes().collect::<Vec<u8>>();
+        let source = data.processed_source.bytes().collect::<Vec<u8>>();
         let c_source = CString::new(source).unwrap();
 
         unsafe {

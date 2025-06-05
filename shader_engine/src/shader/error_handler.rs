@@ -1,4 +1,4 @@
-use crate::shader::transpiler::TranspiledData;
+use crate::shader::preprocessor::ProcessData;
 use crate::utils::colorized_text::Colorize;
 use crate::utils::html_logger::HTMLLogger;
 use gl::types::{GLchar, GLint, GLuint};
@@ -16,7 +16,7 @@ const SHADER_LINE_FORMAT: &str = r"0\((\d+)\) : error .{5}: (.+)";
 pub fn check_shader(
     logger: &mut HTMLLogger,
     shader: GLuint,
-    data: &TranspiledData,
+    data: &ProcessData,
 ) -> Result<(), String> {
     // Success flag determines if the shader compiled successfully
     let mut success: GLint = 0;
@@ -59,7 +59,7 @@ pub fn check_shader(
 
 /// Handles the error message from a shader
 /// and formats it into an easy-to-understand, readable message
-fn shader_error_handler(logger: &mut HTMLLogger, error_message: &str, data: &TranspiledData) {
+fn shader_error_handler(logger: &mut HTMLLogger, error_message: &str, data: &ProcessData) {
     let line_number_regex = Regex::new(SHADER_LINE_FORMAT).unwrap();
 
     logger.open_scope("Compilation Errors".red());

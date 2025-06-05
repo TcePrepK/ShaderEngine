@@ -34,7 +34,7 @@ ShaderEngine is split into two parts:
 
 ## ✨ Features
 
-- **GLSL Transpiler**  
+- **GLSL Preprocessor**  
   Built-in support for `#include` so you can organize your shaders across multiple files. Bevare of circular dependency!
 
 - **Automatic Uniform Detection**  
@@ -42,7 +42,7 @@ ShaderEngine is split into two parts:
   Also updates the uniforms automatically when the variable is changed.
 
 - **HTML Logger**  
-  Dumps detailed compile/transpile logs into an HTML file for easier debugging.
+  Dumps detailed compile/preprocess logs into an HTML file for easier debugging.
 
 - **Shader Hot Reloading**  
   Watches shader files and reloads them on-the-fly without restarting the project.
@@ -111,7 +111,7 @@ cd ray_tracing_in_one_weekend
 cargo run --release
 ```
 
-This will the sample app and begins rendering the defined scene
+This will the sample app and begin rendering the defined scene
 
 ---
 

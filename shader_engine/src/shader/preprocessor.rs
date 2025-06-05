@@ -16,15 +16,15 @@ const UNIFORM_PATTERN: &str = r"uniform\s+(.+)\s+(.+)\s*;";
 /// through the shader transpilation process
 /// Also used while formatting the error messages
 #[derive(Debug)]
-pub(crate) struct TranspiledData {
-    pub(crate) transpiled_source: String,
+pub(crate) struct ProcessData {
+    pub(crate) processed_source: String,
     pub(crate) included_files: Vec<String>,
     pub(crate) line_to_source: Vec<(String, usize)>,
-    pub(crate) uniforms: Vec<TranspiledUniform>,
+    pub(crate) uniforms: Vec<ProcessedUniform>,
 }
 
 #[derive(Clone, Debug)]
-pub struct TranspiledUniform {
+pub(crate) struct ProcessedUniform {
     pub(crate) name: String,
     pub(crate) ty: String,
 }
@@ -41,19 +41,16 @@ fn read_file(path: &str) -> Result<String, String> {
     Ok(contents)
 }
 
-/// Transpiles a shader file and returns the necessary information
-pub fn transpile_shader(
-    logger: &mut HTMLLogger,
-    file_name: &str,
-) -> Result<TranspiledData, String> {
-    let mut data = TranspiledData {
-        transpiled_source: String::new(),
+/// Processes a shader file and returns the necessary information
+pub fn process_shader(logger: &mut HTMLLogger, file_name: &str) -> Result<ProcessData, String> {
+    let mut data = ProcessData {
+        processed_source: String::new(),
         included_files: Vec::new(),
         line_to_source: Vec::new(),
         uniforms: Vec::new(),
     };
 
-    logger.open_scope("Transpiling ".yellow());
+    logger.open_scope("Processing ".yellow());
     match handle_file(logger, Path::new(file_name).to_path_buf(), &mut data) {
         Ok(_) => {
             if !data.uniforms.is_empty() {
@@ -78,7 +75,7 @@ pub fn transpile_shader(
 fn handle_file(
     logger: &mut HTMLLogger,
     file_path: PathBuf,
-    data: &mut TranspiledData,
+    data: &mut ProcessData,
 ) -> Result<(), String> {
     let file_name = file_path.to_str().unwrap();
     logger.info("Including ".cyan() + quote!(file_name).magenta());
@@ -123,8 +120,8 @@ fn handle_file(
             .push((file_name.to_string(), line_number + 1));
 
         // If it isn't an import, we can add it to the transpiled source
-        data.transpiled_source.push_str(line);
-        data.transpiled_source.push('\n');
+        data.processed_source.push_str(line);
+        data.processed_source.push('\n');
 
         // Then we check for the uniforms
         uniform_capture(line, data);
@@ -138,7 +135,7 @@ fn include_capture(
     line: &str,
     capture: &Captures,
     file_base: &Path,
-    data: &mut TranspiledData,
+    data: &mut ProcessData,
 ) -> Result<(), String> {
     if line.starts_with("//") {
         return Ok(());
@@ -149,7 +146,7 @@ fn include_capture(
     handle_file(logger, new_file_path, data)
 }
 
-fn uniform_capture(line: &str, data: &mut TranspiledData) {
+fn uniform_capture(line: &str, data: &mut ProcessData) {
     if line.starts_with("//") {
         return;
     }
@@ -159,7 +156,7 @@ fn uniform_capture(line: &str, data: &mut TranspiledData) {
     if let Some(uniform_capture) = uniform_capture {
         let uniform_type = uniform_capture.get(1).unwrap().as_str();
         let uniform_name = uniform_capture.get(2).unwrap().as_str();
-        data.uniforms.push(TranspiledUniform {
+        data.uniforms.push(ProcessedUniform {
             name: uniform_name.to_string(),
             ty: uniform_type.to_string(),
         });
