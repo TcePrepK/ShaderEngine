@@ -1,3 +1,5 @@
+#define PI 3.14159265
+
 // Random hash generation code is completely from https://stackoverflow.com/a/17479300
 // With a tiny bit of modification in hash functions
 
@@ -51,10 +53,25 @@ vec2 random_timed_vec2(in vec2 seed) {
     return vec2(x, y);
 }
 
+vec2 random_timed_vec2_in_circle(in vec2 seed) {
+    float angle = random(vec3(seed, time)) * 2.0 * PI;
+    float radius = random(vec3(seed, angle));
+
+    return radius * vec2(cos(angle), sin(angle));
+}
+
 vec3 random_vec3(in vec2 seed) {
     float x = random(seed) * 2.0 - 1.0;
     float y = random(vec3(seed, x)) * 2.0 - 1.0;
     float z = random(vec3(seed, y)) * 2.0 - 1.0;
+
+    return vec3(x, y, z);
+}
+
+vec3 random_vec3(in vec3 seed) {
+    float x = random(seed) * 2.0 - 1.0;
+    float y = random(vec4(seed, x)) * 2.0 - 1.0;
+    float z = random(vec4(seed, y)) * 2.0 - 1.0;
 
     return vec3(x, y, z);
 }
@@ -71,3 +88,9 @@ bool is_zero(in float x) { return abs(x) < EPSILON; }
 bool is_zero(in vec2 v) { return is_zero(v.x) && is_zero(v.y); }
 bool is_zero(in vec3 v) { return is_zero(v.x) && is_zero(v.y) && is_zero(v.z); }
 bool is_zero(in vec4 v) { return is_zero(v.x) && is_zero(v.y) && is_zero(v.z) && is_zero(v.w); }
+
+float reflectance(float cosine, float ref_idx) {
+    float r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+    r0 = r0 * r0;
+    return r0 + (1.0 - r0) * pow((1.0 - cosine), 5.0);
+}

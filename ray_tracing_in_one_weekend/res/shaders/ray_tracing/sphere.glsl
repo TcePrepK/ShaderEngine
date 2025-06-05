@@ -14,7 +14,9 @@ HitRecord sphere_hit(in Sphere sphere, in Ray ray) {
     if (time > EPSILON) {
         vec3 position = ray_step(ray, time);
         vec3 normal = normalize(position - sphere.center);
-        return HitRecord(position, normal, time, sphere.material);
+        bool front_face = dot(ray.direction, normal) < 0.0;
+        normal = front_face ? normal : -normal;
+        return HitRecord(position, normal, front_face, time, sphere.material);
     } else {
         return NO_HIT;
     }
