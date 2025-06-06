@@ -17,7 +17,8 @@ you need to build, test shader projects...
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
 - [Usage](#-usage)
-    - [ray_tracing_in_one_weekend](#ray_tracing_in_one_weekend)
+- [Subprojects](#-subprojects)
+    - [Ray Tracing in One Weekend](#-ray-tracing-in-one-weekend)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -98,20 +99,28 @@ cargo build --release
 
 ## 🛠 Usage
 
-### ray_tracing_in_one_weekend
-
-This is a real-time rendering implementation of
-the [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
-series using compute shader, showcasing the engine's capabilities.
+This project contains a few subprojects, each testing the engine's capabilities.
 
 To run:
 
 ```bash
-cd ray_tracing_in_one_weekend
+cd <the subproject you want to run>
 cargo run --release
 ```
 
 This will the sample app and begin rendering the defined scene
+
+---
+
+## 📌 Subprojects
+
+### Ray Tracing in One Weekend
+
+This is my implementation of
+the [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
+series using compute shader for casting and graphics pipeline for filtering.
+
+![Ray Tracing Output](ray_tracing_in_one_weekend/res/assets/ray_tracing_custom_scene.png)
 
 ---
 
