@@ -18,13 +18,13 @@ vec3 sky_color(in Ray ray) {
 const float verticel_fov = 25.0;
 const vec3 look_at = vec3(0.0, 0.0, 0.0);
 const vec3 up = vec3(0.0, 1.0, 0.0);
-const float defocus_angle = 0.0;
-const float focus_distance = 10.0;
+const float defocus_angle = 0.3;
+const float focus_distance = 6.0;
 
 Ray camera_ray(in vec2 pixel, in vec2 resolution, in float time, in vec2 defocus_offset) {
-    //    float rotation_time = time * 0.0;
+    float rotation_time = time * 0.0;
     //    vec3 look_from = 10.0 * vec3(cos(rotation_time), 0.3, sin(rotation_time)) * 3.0; // Camera position
-    vec3 look_from = vec3(0.0, 5.0, 9.0) * 0.9;
+    vec3 look_from = vec3(9.0 * sin(rotation_time), 4.0, 9.0 * cos(rotation_time));
 
     float theta = verticel_fov * 3.14159265 / 180.0;
     float h = tan(theta / 2.0);
@@ -42,7 +42,7 @@ Ray camera_ray(in vec2 pixel, in vec2 resolution, in float time, in vec2 defocus
     vec3 viewport_upper_left_corner = look_from - (focus_distance * w) - (viewport_u + viewport_v) * 0.5;
     vec3 pixel_location = viewport_upper_left_corner + pixel.x * viewport_u + pixel.y * viewport_v;
 
-    float defocus_radius = focus_distance * tan(defocus_angle * 3.14159265 / 180.0 / 2.0);
+    float defocus_radius = focus_distance * tan(defocus_angle * PI / 180.0 / 2.0);
     vec3 defocus_disk_u = u * defocus_radius;
     vec3 defocus_disk_v = v * defocus_radius;
 

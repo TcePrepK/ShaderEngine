@@ -94,3 +94,21 @@ float reflectance(float cosine, float ref_idx) {
     r0 = r0 * r0;
     return r0 + (1.0 - r0) * pow((1.0 - cosine), 5.0);
 }
+
+vec3 rotate_x(in vec3 v, in float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec3(v.x, c * v.y + s * v.z, -s * v.y + c * v.z);
+}
+
+vec3 rotate_y(in vec3 v, in float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec3(c * v.x - s * v.z, v.y, s * v.x + c * v.z);
+}
+
+vec3 rotate_z(in vec3 v, in float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec3(c * v.x + s * v.y, -s * v.x + c * v.y, v.z);
+}

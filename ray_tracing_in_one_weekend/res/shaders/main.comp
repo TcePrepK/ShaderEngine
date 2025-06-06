@@ -6,11 +6,11 @@ uniform float time;
 layout (rgba32f, binding = 0) uniform image2D screen;
 layout (r32f, binding = 1) uniform image2D frame_counter;
 
-#define SAMPLE_PER_PIXEL 16
+#define SAMPLE_PER_PIXEL 4
 #define MAX_SPHERES 16
 #define MAX_BOUNCES 5
 #define EPSILON 0.0001
-#define MAX_FRAMES 4
+#define MAX_FRAMES 256
 
 // No includes in these files
 #include "utils/math.glsl"
@@ -66,6 +66,12 @@ vec3 get_color(in Ray ray, in Sphere[MAX_SPHERES] spheres) {
                 scattered = scatter_metal(current_ray, closest_hit, material, attenuation, scattered_ray);
             } else if (material_type == DIELECTRIC) {
                 scattered = scatter_dielectric(current_ray, closest_hit, material, attenuation, scattered_ray);
+            } else if (material_type == DISCO) {
+                scattered = scatter_disco(current_ray, closest_hit, material, attenuation, scattered_ray);
+            } else if (material_type == CHECKER_BOARD) {
+                scattered = scatter_checker_board(current_ray, closest_hit, material, attenuation, scattered_ray);
+            } else {
+                break;
             }
 
             if (scattered) {
@@ -97,22 +103,32 @@ void main() {
     vec3 final_color = color / SAMPLE_PER_PIXEL;
     final_color = pow(final_color, vec3(1.0 / 2.2));
 
+    //    imageStore(screen, pixel_coords, vec4(final_color, 1.0));
+
     // Get previous frame color
     vec3 prev_color = imageLoad(screen, pixel_coords).rgb;
 
     // Get the difference between the two colors
     vec3 difference = abs(final_color - prev_color);
-    float difference_sum = length(difference);
+    float difference_sum = length(difference) / sqrt(3.0);
+    float final_sum = length(final_color) / sqrt(3.0);
 
     float frame_count = imageLoad(frame_counter, pixel_coords).r * MAX_FRAMES;
-    if (difference_sum > 0.2) {
+    if (difference_sum > 1000.2) {
         // If the difference is greater than 0.01, we will reset the pixel
         imageStore(screen, pixel_coords, vec4(final_color, 1.0));
 
         frame_count = 0.0;
     } else {
+        float scale = 1.0 / MAX_FRAMES;
+        float x = frame_count * frame_count;
+        vec3 blended_color = mix(final_color, prev_color, (scale * x) / (scale * x + 1.0));
+        //        if (final_sum <= 1.0) {
+        //            blended_color = prev_color;
+        //            frame_count -= 1.0;
+        //        }
+
         // If the difference is less than 0.01, we will blend the accumulated color and the current color
-        vec3 blended_color = mix(final_color, prev_color, frame_count / (frame_count + 1.0));
         imageStore(screen, pixel_coords, vec4(blended_color, 1.0));
 
         frame_count += 1.0;

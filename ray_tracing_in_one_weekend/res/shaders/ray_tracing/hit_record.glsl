@@ -1,6 +1,8 @@
 #define LAMBERTIAN 0
 #define METAL 1
 #define DIELECTRIC 2
+#define DISCO 3
+#define CHECKER_BOARD 4
 
 struct Material {
     int material_type;
